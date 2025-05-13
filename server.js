@@ -1,78 +1,88 @@
+// 前端使用 React + TailwindCSS
+// 后端接口假设为 REST API，使用 Express 提供数据
 
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+export default function ProductEntry() {
+  const [product, setProduct] = useState({
+    boxBarcode: "",
+    productBarcode: "",
+    name: "",
+    spec: "",
+    stock: 0,
+  });
 
-const MONGO_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/wms";
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setProduct((prev) => ({ ...prev, [name]: value }));
+  };
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+  const handleSubmit = async () => {
+    if (!product.productBarcode || !product.name) {
+      alert("产品条码和名称不能为空");
+      return;
+    }
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(product),
+      });
+      if (res.ok) {
+        alert("保存成功");
+        setProduct({ boxBarcode: "", productBarcode: "", name: "", spec: "", stock: 0 });
+      } else {
+        alert("保存失败");
+      }
+    } catch (err) {
+      alert("网络错误");
+    }
+  };
 
-
-
-// 商品模型定义
-const productSchema = new mongoose.Schema({
-  boxBarcode: { type: String, default: "" },
-  productBarcode: { type: String, required: true, unique: true },
-  name: { type: String, required: true },
-  spec: { type: String },
-  stock: { type: Number, default: 0 },
-});
-
-const Product = mongoose.model("Product", productSchema);
-
-// 添加商品
-app.post("/api/products", async (req, res) => {
-  try {
-    const data = req.body;
-    const existing = await Product.findOne({ productBarcode: data.productBarcode });
-    if (existing) return res.status(400).json({ message: "该产品条码已存在" });
-    const newProduct = new Product(data);
-    await newProduct.save();
-    res.status(201).json(newProduct);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "服务器错误" });
-  }
-});
-
-// 获取商品列表
-app.get("/api/products", async (req, res) => {
-  const products = await Product.find();
-  res.json(products);
-});
-
-// 更新商品
-app.put("/api/products/:id", async (req, res) => {
-  try {
-    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updated) return res.status(404).json({ message: "未找到商品" });
-    res.json(updated);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "更新失败" });
-  }
-});
-
-// 删除商品
-app.delete("/api/products/:id", async (req, res) => {
-  try {
-    const deleted = await Product.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "未找到商品" });
-    res.json({ message: "删除成功" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "删除失败" });
-  }
-});
-
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`🚀 服务器启动于 http://localhost:${PORT}`);
-});
+  return (
+    <div className="p-4 max-w-md mx-auto">
+      <Card>
+        <CardContent className="space-y-4 p-4">
+          <h2 className="text-xl font-bold">产品信息录入</h2>
+          <Input
+            name="boxBarcode"
+            placeholder="箱子条码（可选）"
+            value={product.boxBarcode}
+            onChange={handleChange}
+          />
+          <Input
+            name="productBarcode"
+            placeholder="产品条码（必填）"
+            value={product.productBarcode}
+            onChange={handleChange}
+          />
+          <Input
+            name="name"
+            placeholder="产品名称（中/英文）"
+            value={product.name}
+            onChange={handleChange}
+          />
+          <Input
+            name="spec"
+            placeholder="规格（如 500g*12）"
+            value={product.spec}
+            onChange={handleChange}
+          />
+          <Input
+            name="stock"
+            placeholder="库存数量"
+            type="number"
+            value={product.stock}
+            onChange={handleChange}
+          />
+          <Button onClick={handleSubmit} className="w-full">保存</Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
