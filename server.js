@@ -7,10 +7,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect("mongodb+srv://jiukuiiii:Zjk19981226%40@wms.ufhnhjo.mongodb.net/?retryWrites=true&w=majority&appName=wms", {
+const MONGO_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/wms";
+
+mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
 
 
 // 商品模型定义
