@@ -1,18 +1,15 @@
-
 {
   "name": "wms-backend",
   "version": "1.0.0",
-  "description": "Warehouse Management System Backend",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": [],
-  "author": "you",
-  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "mongoose": "^7.5.0"
+    "mongoose": "^7.0.0"
   }
 }
